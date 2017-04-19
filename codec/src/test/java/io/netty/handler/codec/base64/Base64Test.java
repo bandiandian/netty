@@ -158,4 +158,14 @@ public class Base64Test {
             expectedBuf.release();
         }
     }
+
+    @Test
+    public void testOverflowLen43() {
+        assertEquals(Integer.MAX_VALUE, Base64.len43(Integer.MAX_VALUE));
+    }
+
+    @Test
+    public void testLen34() {
+        assertEquals(536870911, Base64.len34(Integer.MAX_VALUE));
+    }
 }

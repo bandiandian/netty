@@ -120,11 +120,10 @@ public final class Base64 {
             throw new NullPointerException("dialect");
         }
 
-        int len43 = (len << 2) / 3;
-        ByteBuf dest = allocator.buffer(
-                len43 +
-                        (len % 3 > 0 ? 4 : 0) + // Account for padding
-                        (breakLines ? len43 / MAX_LINE_LENGTH : 0)).order(src.order()); // New lines
+        int len43 = len43(len);
+        ByteBuf dest = allocator.buffer((int) Math.min(Integer.MAX_VALUE, (long) len43 +
+                (len % 3 > 0 ? 4 : 0) + // Account for padding
+                (breakLines ? len43 / MAX_LINE_LENGTH : 0))).order(src.order()); // New lines
         byte[] alphabet = alphabet(dialect);
         int d = 0;
         int e = 0;
@@ -153,6 +152,11 @@ public final class Base64 {
         }
 
         return dest.slice(0, e);
+    }
+
+    // package-private for testing
+    static int len43(int len) {
+        return (int) Math.min(((long) len << 2) / 3, Integer.MAX_VALUE);
     }
 
     private static void encode3to4(
@@ -312,6 +316,11 @@ public final class Base64 {
         return new Decoder().decode(src, off, len, allocator, dialect);
     }
 
+    // package-private for testing
+    static int len34(int len) {
+        return (len * 3) >>> 2;
+    }
+
     private static final class Decoder implements ByteProcessor {
         private final byte[] b4 = new byte[4];
         private int b4Posn;
@@ -322,7 +331,7 @@ public final class Base64 {
         private ByteBuf dest;
 
         ByteBuf decode(ByteBuf src, int off, int len, ByteBufAllocator allocator, Base64Dialect dialect) {
-            int len34 = (len * 3) >>> 2;
+            int len34 = len34(len);
             dest = allocator.buffer(len34).order(src.order()); // Upper limit on size of output
 
             decodabet = decodabet(dialect);
